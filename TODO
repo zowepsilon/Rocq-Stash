@@ -12,8 +12,6 @@
 (*TODO? : un foncteur ne reflète pas forcément les isomorphismes*)
 (*TODO : si f possède un inverse, il est unique*)
 (*TODO : si f possède un inverse, c'est un isomorphisme*)
-(*TODO : composition de 2 iso = iso*)
-(*TODO : identité = iso*)
 (*TODO : définition de groupoïde*)
 (*TODO : définition de catégorie squelettique*)
 (*TODO : définition de catégorie connexe*)

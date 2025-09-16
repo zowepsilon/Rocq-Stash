@@ -28,6 +28,17 @@ Instance Op (C: Category): Category := {
 Definition Isomorphism {C: Category} {A B: Obj} (f: Hom A B) :=
   exists (g: Hom B A), (comp g f = id A) /\ (comp f g = id B).
 
+Lemma iso_id: forall (C: Category) (A: Obj),
+    Isomorphism (id A).
+Proof.
+  intros.
+  unfold Isomorphism.
+  destruct C.
+  set (IdA := id0 A).
+  exists IdA.
+  split;trivial.
+Qed.
+
 Lemma iso_comp: forall (C: Category) (X Y Z: Obj) (f: Hom X Y) (g: Hom Y Z),
     Isomorphism f -> Isomorphism g -> Isomorphism (comp g f).
 Proof.
