@@ -39,9 +39,9 @@ Lemma iso_id: forall (C: Category) (A: C),
 Proof.
   intros.
   unfold Isomorphism.
-  destruct C.
-  set (IdA := id0 A).
-  exists IdA.
+  exists (id C A).
+  unfold Inverses.
+  rewrite comp_id_left.
   split;trivial.
 Qed.
 
@@ -339,3 +339,17 @@ Proof.
   intros.
   now repeat rewrite comp_id_right in H.
 Qed.
+
+Theorem mono_comp :
+  forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
+  monomorphism g -> monomorphism f -> monomorphism (comp Cat g f).
+Proof.
+Admitted.
+
+Theorem epi_comp :
+  forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
+  epimorphism g -> epimorphism f -> epimorphism (comp Cat g f).
+Proof.
+Admitted.
+
+
