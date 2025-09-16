@@ -1,6 +1,8 @@
 From Stdlib Require Import Setoids.Setoid.
 From Stdlib Require Import Program.
 
+Require Import Stdlib.Logic.ProofIrrelevance.
+
 Class Category := {
     Obj: Type;
     Hom: Obj -> Obj -> Type;
@@ -26,8 +28,11 @@ Instance Op (C: Category): Category := {
     comp_id_right A B f := comp_id_left B A f;
 }.
 
+Definition Inverses {C: Category} {A B: Obj} (f: Hom A B) (g: Hom B A) :=
+  (comp g f = id A) /\ (comp f g = id B).
+
 Definition Isomorphism {C: Category} {A B: Obj} (f: Hom A B) :=
-  exists (g: Hom B A), (comp g f = id A) /\ (comp f g = id B).
+  exists (g: Hom B A), Inverses f g.
 
 Lemma iso_id: forall (C: Category) (A: Obj),
     Isomorphism (id A).
@@ -292,3 +297,20 @@ Proof.
     f_equal.
     trivial.
 Qed.
+
+Class NatTrans {C D: Category} (F G: Functor C D) := {
+  nt: forall (A: Obj), Hom (F.(F_Obj) A) (G.(F_Obj) A);
+  nt_naturality: forall (A B: Obj) (f: Hom A B),
+    comp (F_Hom f) (nt A) = comp (nt B) (F_Hom f);
+}.
+
+Definition NatIsomorphism {C D: Category} {F G: Functor C D} (a: NatTrans F G) :=
+  exists (b: NatTrans G F), forall (A: Obj), Inverses (a.(nt) A) (b.(nt) A).
+
+Theorem C_op_op_is_C: forall (C: Category), Op (Op C) = C.
+Proof.
+  intro.
+  set (D := Op (Op C)).
+  destruct C.
+  destruct D.
+Admitted.
