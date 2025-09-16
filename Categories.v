@@ -285,6 +285,7 @@ Proof.
   set (D := Op (Op C)).
   destruct C.
   destruct D.
+Admitted.
 
 Definition monomorphism {C: Category} {E F: C} (f: Hom C E F) :=
   forall (G: C), forall (g h: Hom C G E), (comp C f g = comp C f h) -> (g = h).
@@ -305,3 +306,15 @@ Proof.
   intros.
   now repeat rewrite comp_id_right in H.
 Qed.
+
+Theorem mono_comp :
+  forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
+  monomorphism g -> monomorphism f -> monomorphism (comp Cat g f).
+Proof.
+Admitted.
+
+Theorem epi_comp :
+  forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
+  epimorphism g -> epimorphism f -> epimorphism (comp Cat g f).
+Proof.
+Admitted.
