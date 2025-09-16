@@ -15,7 +15,7 @@ Record Group := {
 Definition is_neutral {G: Group} (e: G) :=
     (forall y : G, (Loi G) e y = y) /\ (forall y : G, (Loi G) y e = y).
 
-Theorem uniq_initial:
+Theorem uniq_neutral:
   forall (G: Group) (x y: Grp G), is_neutral x -> is_neutral y -> x = y.
 Proof.
   (*Woah thats a bad proof*)
@@ -31,4 +31,10 @@ Proof.
   rewrite H1. rewrite H2. trivial.
 Qed.
 
+Definition puissance {G : Group} (g: G) (n: nat) := match n with
+  | 0 => Id G
+  | S n => Loi G g (puissance g (n-1))
+end
+.
+Definition ordre {G: Group} (g: G) :=
 

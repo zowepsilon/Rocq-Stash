@@ -3,8 +3,8 @@ From Stdlib Require Import Program.
 
 Require Import Stdlib.Logic.ProofIrrelevance.
 
-Class Category := {
-    Obj: Type;
+Record Category := {
+    Obj :> Type;
     Hom: Obj -> Obj -> Type;
     comp: forall {A B C: Obj}, Hom B C -> Hom A B -> Hom A C;
     comp_assoc:
@@ -13,29 +13,29 @@ Class Category := {
       forall (g: Hom B0 C0),
       forall (h: Hom A0 B0),
       comp (comp f g) h = comp f (comp g h);
-    id: forall (A: Obj), Hom A A;
+    id : forall (A: Obj), Hom A A;
     comp_id_left: forall (A B: Obj), forall (f: Hom A B), comp (id B) f = f;
     comp_id_right: forall (A B: Obj), forall (f: Hom A B), comp f (id A) = f;
 }.
 
-Instance Op (C: Category): Category := {
+Definition Op (C: Category): Category := {|
     Obj := C.(Obj);
     Hom A B := C.(Hom) B A;
     comp _ _ _ g f := C.(comp) f g;
     comp_assoc _ _ _ _ f g h := eq_sym (C.(comp_assoc) h g f);
     id := C.(id);
-    comp_id_left A B f := comp_id_right B A f;
-    comp_id_right A B f := comp_id_left B A f;
-}.
+    comp_id_left A B f := (comp_id_right C) B A f;
+    comp_id_right A B f := (comp_id_left C) B A f;
+|}.
 
-Definition Inverses {C: Category} {A B: Obj} (f: Hom A B) (g: Hom B A) :=
-  (comp g f = id A) /\ (comp f g = id B).
+Definition Inverses {C: Category} {A B: C} (f: (Hom C) A B) (g: (Hom C) B A) :=
+  ((comp C) g f = (id C) A) /\ ((comp C) f g = (id C) B).
 
-Definition Isomorphism {C: Category} {A B: Obj} (f: Hom A B) :=
-  exists (g: Hom B A), Inverses f g.
+Definition Isomorphism {C: Category} {A B: C} (f: (Hom C) A B) :=
+  exists (g: (Hom C) B A), Inverses f g.
 
-Lemma iso_id: forall (C: Category) (A: Obj),
-    Isomorphism (id A).
+Lemma iso_id: forall (C: Category) (A: C),
+    Isomorphism ((id C) A).
 Proof.
   intros.
   unfold Isomorphism.
@@ -45,14 +45,14 @@ Proof.
   split;trivial.
 Qed.
 
-Lemma iso_comp: forall (C: Category) (X Y Z: Obj) (f: Hom X Y) (g: Hom Y Z),
-    Isomorphism f -> Isomorphism g -> Isomorphism (comp g f).
+Lemma iso_comp: forall (C: Category) (X Y Z: C) (f: (Hom C) X Y) (g: (Hom C) Y Z),
+    Isomorphism f -> Isomorphism g -> Isomorphism (comp C g f).
 Proof.
   intros C X Y Z f g fI gI.
   unfold Isomorphism in *.
   destruct fI as [f' [fI_left fI_right]].
   destruct gI as [g' [gI_left gI_right]].
-  exists (comp f' g').
+  exists ((comp C) f' g').
   split.
   - setoid_rewrite -> comp_assoc at 1.
     setoid_rewrite <- comp_assoc at 2.
@@ -68,21 +68,21 @@ Proof.
     reflexivity.
 Qed.
 
-Definition Isomorphic {C: Category} (A B: Obj) :=
-  exists (f: Hom A B), Isomorphism f.
+Definition Isomorphic {C: Category} (A B: C) :=
+  exists (f: (Hom C) A B), Isomorphism f.
 
-Lemma iso_refl: forall (C: Category), forall A, Isomorphic A A.
+Lemma iso_refl: forall (C: Category), forall A:C, Isomorphic A A.
 Proof.
   intros C A.
   unfold Isomorphic.
-  exists (id A).
-  exists (id A).
+  exists ((id C) A).
+  exists ((id C) A).
   split.
-  - apply (comp_id_left A A).
-  - apply (comp_id_left A A).
+  - apply ((comp_id_left C) A A).
+  - apply ((comp_id_left C) A A).
 Qed.
 
-Lemma iso_sym: forall (C: Category) (X Y: Obj), Isomorphic X Y -> Isomorphic Y X.
+Lemma iso_sym: forall (C: Category) (X Y: C), Isomorphic X Y -> Isomorphic Y X.
 Proof.
   intros C X Y IsoXY.
   unfold Isomorphic in *.
@@ -95,18 +95,18 @@ Proof.
   apply IsoXY.
 Qed.
 
-Lemma iso_trans: forall (C: Category) (X Y Z: Obj), Isomorphic X Y -> Isomorphic Y Z -> Isomorphic X Z.
+Lemma iso_trans: forall (C: Category) (X Y Z: C), Isomorphic X Y -> Isomorphic Y Z -> Isomorphic X Z.
 Proof.
   intros C X Y Z IsoXY IsoYZ.
   unfold Isomorphic in *.
   destruct IsoXY as [xy IsoXY].
   destruct IsoYZ as [yz IsoYZ].
-  exists (comp yz xy).
+  exists ((comp C) yz xy).
   apply iso_comp.
   trivial. trivial.
 Qed.
 
-Lemma iso_in_op: forall (C: Category), forall (A B: Obj), @Isomorphic C A B <-> @Isomorphic (Op C) A B.
+Lemma iso_in_op: forall (C: Category), forall (A B: C), @Isomorphic C A B <-> @Isomorphic (Op C) A B.
 Proof.
   intros C A B.
   unfold Isomorphic.
@@ -121,11 +121,11 @@ Proof.
     split. trivial. trivial.
 Qed.
 
-Definition Initial {C: Category} (A0: Obj) :=
-  forall (A: Obj), exists (f: Hom A0 A), forall (f': Hom A0 A), f = f'.
+Definition Initial {C: Category} (A0: C) :=
+  forall (A: C), exists (f: (Hom C) A0 A), forall (f': (Hom C) A0 A), f = f'.
 
 Theorem uniq_initial:
-  forall (C: Category) (A B: Obj), Initial A -> Initial B -> Isomorphic A B.
+  forall (C: Category) (A B: C), Initial A -> Initial B -> Isomorphic A B.
 Proof.
   intros C A B IA IB.
   unfold Initial in IA.
@@ -137,23 +137,23 @@ Proof.
   exists g.
   destruct (IA A) as [id_A uniq_id_A].
   destruct (IB B) as [id_B uniq_id_B].
-  specialize (uniq_id_A (id A)) as uniq_id_A_id.
-  specialize (uniq_id_B (id B)) as uniq_id_B_id.
+  specialize (uniq_id_A (id C A)) as uniq_id_A_id.
+  specialize (uniq_id_B (id C B)) as uniq_id_B_id.
   rewrite uniq_id_A_id in uniq_id_A.
   rewrite uniq_id_B_id in uniq_id_B.
   split.
-  - specialize (uniq_id_A (comp g f)).
+  - specialize (uniq_id_A (comp C g f)).
     symmetry.
     assumption.
-  - specialize (uniq_id_B (comp f g)).
+  - specialize (uniq_id_B (comp C f g)).
     symmetry.
     assumption.
 Qed.
 
-Definition Final {C: Category} (A0: Obj) := @Initial (Op C) A0.
+Definition Final {C: Category} (A0: C) := @Initial (Op C) A0.
 
 Theorem uniq_final:
-  forall (C: Category) (A B: Obj), Final A -> Final B -> Isomorphic A B.
+  forall (C: Category) (A B: C), Final A -> Final B -> Isomorphic A B.
 Proof.
   intros C A B FA FB.
   apply iso_in_op.
@@ -161,18 +161,18 @@ Proof.
   trivial. trivial.
 Qed.
 
-Class Product {C: Category} (A B: Obj) := {
-  obj: Obj;
+Class Product {C: Category} (A B: C) := {
+  obj: Obj C;
 
-  proj1: Hom obj A;
-  proj2: Hom obj B;
+  proj1: Hom C obj A;
+  proj2: Hom C obj B;
 
-  univ: forall (X: Obj) (f: Hom X A) (g: Hom X B), exists! (u: Hom X obj),
-               comp proj1 u = f /\ comp proj2 u = g;
+  univ: forall (X: C) (f: Hom C X A) (g: Hom C X B), exists! (u: Hom C X obj),
+               comp C proj1 u = f /\ comp C proj2 u = g;
 }.
 
-Lemma id_as_product_hom: forall (C: Category) (A B: Obj) (P: Product A B),
-    comp proj1 (id obj) = proj1 /\ comp proj2 (id obj) = proj2.
+Lemma id_as_product_hom: forall (C: Category) (A B: C) (P: Product A B),
+    comp C proj1 (id C obj) = proj1 /\ comp C proj2 (id C obj) = proj2.
 Proof.
   intros.
   split.
@@ -181,7 +181,7 @@ Proof.
 Qed.
 
 
-Theorem unique_product: forall (C: Category) (A B: Obj) (P Q: Product A B), Isomorphic P.(obj) Q.(obj).
+Theorem unique_product: forall (C: Category) (A B: C) (P Q: Product A B), Isomorphic P.(obj) Q.(obj).
 Proof.
   intros C A B P Q.
 
@@ -200,8 +200,8 @@ Proof.
   exists pq.
   exists qp.
 
-  specialize (uniqPP (id P.(obj)) (id_as_product_hom C A B P)) as uniqPP_id.
-  specialize (uniqQQ (id Q.(obj)) (id_as_product_hom C A B Q)) as uniqQQ_id.
+  specialize (uniqPP (id C P.(obj)) (id_as_product_hom C A B P)) as uniqPP_id.
+  specialize (uniqQQ (id C Q.(obj)) (id_as_product_hom C A B Q)) as uniqQQ_id.
   rewrite uniqPP_id in uniqPP.
   rewrite uniqQQ_id in uniqQQ.
 
@@ -210,7 +210,7 @@ Proof.
 
   split.
   - symmetry.
-    apply (uniqPP (comp qp pq)).
+    apply (uniqPP (comp C qp pq)).
     split.
     + rewrite <- comp_assoc.
       rewrite -> univQP1.
@@ -221,7 +221,7 @@ Proof.
       rewrite univPQ2.
       reflexivity.
   - symmetry.
-    apply (uniqQQ (comp pq qp)).
+    apply (uniqQQ (comp C pq qp)).
     split.
     + rewrite <- comp_assoc.
       rewrite -> univPQ1.
@@ -237,7 +237,7 @@ Class Functor (C D: Category) := {
   F_Obj: C.(Obj) -> D.(Obj);
   F_Hom: forall {A B: C.(Obj)}, C.(Hom) A B -> D.(Hom) (F_Obj A) (F_Obj B);
 
-  F_id: forall (A: C.(Obj)), F_Hom (id A) = id (F_Obj A);
+  F_id: forall (A: C.(Obj)), F_Hom (id C A) = id D (F_Obj A);
   F_comp: forall (X Y Z: C.(Obj)) (f: C.(Hom) X Y) (g: C.(Hom) Y Z), F_Hom (C.(comp) g f) = D.(comp) (F_Hom g) (F_Hom f);
 }.
 
@@ -249,8 +249,8 @@ Instance functor_id (C: Category): Functor C C := {
 }.
 
 Lemma functor_comp_id:
-  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (A : Obj),
-    (compose G.(F_Hom) F.(F_Hom)) (id A) = id ((compose G.(F_Obj) F.(F_Obj)) A).
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (A : C),
+    (compose G.(F_Hom) F.(F_Hom)) (id C A) = id E ((compose G.(F_Obj) F.(F_Obj)) A).
 Proof.
   intros.
   unfold compose.
@@ -260,7 +260,7 @@ Proof.
 Qed.
 
 Lemma functor_comp_comp:
-  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (X Y Z: Obj) (f: Hom X Y) (g: Hom Y Z),
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (X Y Z: C) (f: Hom C X Y) (g: Hom C Y Z),
     (compose G.(F_Hom) F.(F_Hom)) (C.(comp) g f)
     = E.(comp) ((compose G.(F_Hom) F.(F_Hom)) g) ((compose G.(F_Hom) F.(F_Hom)) f).
 Proof.
@@ -299,13 +299,13 @@ Proof.
 Qed.
 
 Class NatTrans {C D: Category} (F G: Functor C D) := {
-  nt: forall (A: Obj), Hom (F.(F_Obj) A) (G.(F_Obj) A);
-  nt_naturality: forall (A B: Obj) (f: Hom A B),
-    comp (F_Hom f) (nt A) = comp (nt B) (F_Hom f);
+  nt: forall (A: C), Hom D (F.(F_Obj) A) (G.(F_Obj) A);
+  nt_naturality: forall (A B: C) (f: Hom C A B),
+    comp D (F_Hom f) (nt A) = comp D (nt B) (F_Hom f);
 }.
 
 Definition NatIsomorphism {C D: Category} {F G: Functor C D} (a: NatTrans F G) :=
-  exists (b: NatTrans G F), forall (A: Obj), Inverses (a.(nt) A) (b.(nt) A).
+  exists (b: NatTrans G F), forall (A: C), Inverses (a.(nt) A) (b.(nt) A).
 
 Theorem C_op_op_is_C: forall (C: Category), Op (Op C) = C.
 Proof.
