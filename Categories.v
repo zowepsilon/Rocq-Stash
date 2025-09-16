@@ -313,4 +313,29 @@ Proof.
   set (D := Op (Op C)).
   destruct C.
   destruct D.
+  simpl.
 Admitted.
+
+Definition monomorphism {C : Category} {E F : C} (f : Hom C E F) :=
+  forall G : C, forall g h : Hom C G E, comp C f g = comp C f h -> g = h.
+
+Definition epimorphism {C : Category} {E F : C} (f : Hom C E F) :=
+  forall G : C, forall g h : Hom C F G, comp C g f = comp C h f -> g = h.
+
+Theorem id_mono :
+  forall (C : Category), forall (A : C), monomorphism (id C A).
+Proof.
+  intros.
+  unfold monomorphism.
+  intros.
+  now repeat rewrite comp_id_left in H.
+Qed.
+
+Theorem id_epi :
+  forall (C : Category), forall (A : C), epimorphism (id C A).
+Proof.
+  intros.
+  unfold epimorphism.
+  intros.
+  now repeat rewrite comp_id_right in H.
+Qed.

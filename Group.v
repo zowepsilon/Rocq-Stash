@@ -31,10 +31,3 @@ Proof.
   rewrite H1. rewrite H2. trivial.
 Qed.
 
-Definition puissance {G : Group} (g: G) (n: nat) := match n with
-  | 0 => Id G
-  | S n => Loi G g (puissance g (n-1))
-end
-.
-Definition ordre {G: Group} (g: G) :=
-
