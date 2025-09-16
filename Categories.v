@@ -1,4 +1,7 @@
 From Stdlib Require Import Setoids.Setoid.
+From Stdlib Require Import Program.
+
+Require Import Stdlib.Logic.ProofIrrelevance.
 
 Class Category := {
     Obj: Type;
@@ -25,8 +28,11 @@ Instance Op (C: Category): Category := {
     comp_id_right A B f := comp_id_left B A f;
 }.
 
+Definition Inverses {C: Category} {A B: Obj} (f: Hom A B) (g: Hom B A) :=
+  (comp g f = id A) /\ (comp f g = id B).
+
 Definition Isomorphism {C: Category} {A B: Obj} (f: Hom A B) :=
-  exists (g: Hom B A), (comp g f = id A) /\ (comp f g = id B).
+  exists (g: Hom B A), Inverses f g.
 
 Lemma iso_id: forall (C: Category) (A: Obj),
     Isomorphism (id A).
@@ -235,6 +241,43 @@ Class Functor (C D: Category) := {
   F_comp: forall (X Y Z: C.(Obj)) (f: C.(Hom) X Y) (g: C.(Hom) Y Z), F_Hom (C.(comp) g f) = D.(comp) (F_Hom g) (F_Hom f);
 }.
 
+Instance functor_id (C: Category): Functor C C := {
+    F_Obj A := A;
+    F_Hom _ _ f := f;
+    F_id _ := eq_refl;
+    F_comp _ _ _ _ _ := eq_refl;
+}.
+
+Lemma functor_comp_id:
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (A : Obj),
+    (compose G.(F_Hom) F.(F_Hom)) (id A) = id ((compose G.(F_Obj) F.(F_Obj)) A).
+Proof.
+  intros.
+  unfold compose.
+  rewrite F.(F_id).
+  rewrite G.(F_id).
+  reflexivity.
+Qed.
+
+Lemma functor_comp_comp:
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (X Y Z: Obj) (f: Hom X Y) (g: Hom Y Z),
+    (compose G.(F_Hom) F.(F_Hom)) (C.(comp) g f)
+    = E.(comp) ((compose G.(F_Hom) F.(F_Hom)) g) ((compose G.(F_Hom) F.(F_Hom)) f).
+Proof.
+  intros.
+  unfold compose.
+  rewrite F.(F_comp).
+  rewrite G.(F_comp).
+  reflexivity.
+Qed.
+
+Instance functor_comp {C D E: Category} (F: Functor C D) (G: Functor D E): Functor C E := {
+  F_Obj := compose G.(F_Obj) F.(F_Obj);
+  F_Hom _ _ := compose G.(F_Hom) F.(F_Hom);
+  F_id := functor_comp_id _ _ _ _ _;
+  F_comp := functor_comp_comp _ _ _ _ _;
+}.
+
 Theorem functor_preserve_iso:
   forall (C D: Category) (F: Functor C D) (A B: C.(Obj)), @Isomorphic C A B -> @Isomorphic D (F_Obj A) (F_Obj B).
 Proof.
@@ -254,3 +297,20 @@ Proof.
     f_equal.
     trivial.
 Qed.
+
+Class NatTrans {C D: Category} (F G: Functor C D) := {
+  nt: forall (A: Obj), Hom (F.(F_Obj) A) (G.(F_Obj) A);
+  nt_naturality: forall (A B: Obj) (f: Hom A B),
+    comp (F_Hom f) (nt A) = comp (nt B) (F_Hom f);
+}.
+
+Definition NatIsomorphism {C D: Category} {F G: Functor C D} (a: NatTrans F G) :=
+  exists (b: NatTrans G F), forall (A: Obj), Inverses (a.(nt) A) (b.(nt) A).
+
+Theorem C_op_op_is_C: forall (C: Category), Op (Op C) = C.
+Proof.
+  intro.
+  set (D := Op (Op C)).
+  destruct C.
+  destruct D.
+Admitted.
