@@ -1,4 +1,5 @@
 From Stdlib Require Import Setoids.Setoid.
+From Stdlib Require Import Program.
 
 Class Category := {
     Obj: Type;
@@ -233,6 +234,43 @@ Class Functor (C D: Category) := {
 
   F_id: forall (A: C.(Obj)), F_Hom (id A) = id (F_Obj A);
   F_comp: forall (X Y Z: C.(Obj)) (f: C.(Hom) X Y) (g: C.(Hom) Y Z), F_Hom (C.(comp) g f) = D.(comp) (F_Hom g) (F_Hom f);
+}.
+
+Instance functor_id (C: Category): Functor C C := {
+    F_Obj A := A;
+    F_Hom _ _ f := f;
+    F_id _ := eq_refl;
+    F_comp _ _ _ _ _ := eq_refl;
+}.
+
+Lemma functor_comp_id:
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (A : Obj),
+    (compose G.(F_Hom) F.(F_Hom)) (id A) = id ((compose G.(F_Obj) F.(F_Obj)) A).
+Proof.
+  intros.
+  unfold compose.
+  rewrite F.(F_id).
+  rewrite G.(F_id).
+  reflexivity.
+Qed.
+
+Lemma functor_comp_comp:
+  forall (C D E: Category) (F: Functor C D) (G: Functor D E) (X Y Z: Obj) (f: Hom X Y) (g: Hom Y Z),
+    (compose G.(F_Hom) F.(F_Hom)) (C.(comp) g f)
+    = E.(comp) ((compose G.(F_Hom) F.(F_Hom)) g) ((compose G.(F_Hom) F.(F_Hom)) f).
+Proof.
+  intros.
+  unfold compose.
+  rewrite F.(F_comp).
+  rewrite G.(F_comp).
+  reflexivity.
+Qed.
+
+Instance functor_comp {C D E: Category} (F: Functor C D) (G: Functor D E): Functor C E := {
+  F_Obj := compose G.(F_Obj) F.(F_Obj);
+  F_Hom _ _ := compose G.(F_Hom) F.(F_Hom);
+  F_id := functor_comp_id _ _ _ _ _;
+  F_comp := functor_comp_comp _ _ _ _ _;
 }.
 
 Theorem functor_preserve_iso:
