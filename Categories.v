@@ -1,7 +1,7 @@
 From Stdlib Require Import Setoids.Setoid.
 From Stdlib Require Import Program.
-
 Require Import Stdlib.Logic.ProofIrrelevance.
+From Ltac2 Require Import Ltac2.
 
 Record Category := {
   Obj :> Type;
@@ -107,7 +107,7 @@ Qed.
 Definition Initial {C: Category} (A0: C) :=
   forall (A: C), exists (f: (Hom C) A0 A), forall (f': (Hom C) A0 A), f = f'.
 
-Theorem uniq_initial (C: Category) (A B: C): Initial A -> Initial B -> Isomorphic A B.
+Theorem unique_initial (C: Category) (A B: C): Initial A -> Initial B -> Isomorphic A B.
 Proof.
   intros IA IB.
   unfold Initial in IA.
@@ -117,28 +117,28 @@ Proof.
   destruct (IB A) as [g _].
   exists f.
   exists g.
-  destruct (IA A) as [id_A uniq_id_A].
-  destruct (IB B) as [id_B uniq_id_B].
-  specialize (uniq_id_A (id C A)) as uniq_id_A_id.
-  specialize (uniq_id_B (id C B)) as uniq_id_B_id.
-  rewrite uniq_id_A_id in uniq_id_A.
-  rewrite uniq_id_B_id in uniq_id_B.
+  destruct (IA A) as [id_A unique_id_A].
+  destruct (IB B) as [id_B unique_id_B].
+  specialize (unique_id_A (id C A)) as unique_id_A_id.
+  specialize (unique_id_B (id C B)) as unique_id_B_id.
+  rewrite unique_id_A_id in unique_id_A.
+  rewrite unique_id_B_id in unique_id_B.
   split.
-  - specialize (uniq_id_A (comp C g f)).
+  - specialize (unique_id_A (comp C g f)).
     symmetry.
     assumption.
-  - specialize (uniq_id_B (comp C f g)).
+  - specialize (unique_id_B (comp C f g)).
     symmetry.
     assumption.
 Qed.
 
 Definition Final {C: Category} (A0: C) := @Initial (Op C) A0.
 
-Theorem uniq_final (C: Category) (A B: C): Final A -> Final B -> Isomorphic A B.
+Theorem unique_final (C: Category) (A B: C): Final A -> Final B -> Isomorphic A B.
 Proof.
   intros FA FB.
   apply iso_in_op.
-  apply uniq_initial.
+  apply unique_initial.
   trivial. trivial.
 Qed.
 
@@ -290,6 +290,7 @@ Admitted.
 Definition monomorphism {C: Category} {E F: C} (f: Hom C E F) :=
   forall (G: C), forall (g h: Hom C G E), (comp C f g = comp C f h) -> (g = h).
 
+(* TODO: change to a dual based definition *)
 Definition epimorphism {C: Category} {E F: C} (f: Hom C E F) :=
   forall (G: C), forall (g h: Hom C F G), (comp C g f = comp C h f) -> (g = h).
 
@@ -297,23 +298,27 @@ Theorem id_mono (C: Category) (A: C): monomorphism (id C A).
 Proof.
   unfold monomorphism.
   intros.
-  now repeat rewrite comp_id_left in H.
+  rewrite comp_id_left in H.
+  rewrite comp_id_left in H.
+  trivial.
 Qed.
 
 Theorem id_epi (C: Category) (A: C): epimorphism (id C A).
 Proof.
   unfold epimorphism.
   intros.
-  now repeat rewrite comp_id_right in H.
+  rewrite comp_id_right in H.
+  rewrite comp_id_right in H.
+  trivial.
 Qed.
 
-Theorem mono_comp :
+Theorem mono_comp:
   forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
   monomorphism g -> monomorphism f -> monomorphism (comp Cat g f).
 Proof.
 Admitted.
 
-Theorem epi_comp :
+Theorem epi_comp:
   forall (Cat : Category), forall (A B C : Cat), forall (f : Hom Cat A B), forall (g : Hom Cat B C),
   epimorphism g -> epimorphism f -> epimorphism (comp Cat g f).
 Proof.
