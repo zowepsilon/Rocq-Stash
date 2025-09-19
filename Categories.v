@@ -24,6 +24,12 @@ Definition Op (C: Category): Category := {|
   comp_id_right A B f := (comp_id_left C) B A f;
 |}.
 
+Lemma id_is_op_id {C: Category} (A : C) :
+  id C A = id (Op C) A.
+Proof.
+  trivial.
+Qed.
+
 Definition Inverses {C: Category} {A B: C} (f: (Hom C) A B) (g: (Hom C) B A) :=
   ((comp C) g f = (id C) A) /\ ((comp C) f g = (id C) B).
 
@@ -277,6 +283,48 @@ Class NatTrans {C D: Category} (F G: Functor C D) := {
     comp D (F_Hom f) (nt A) = comp D (nt B) (F_Hom f);
 }.
 
+Section NAT.
+
+  Program Instance nat_id (C D: Category) (F: Functor C D): NatTrans F F := {
+    nt := (fun A => id D (F.(F_Obj) A));
+  }.
+  Next Obligation.
+    rewrite comp_id_right.
+    rewrite comp_id_left.
+    trivial.
+  Qed.
+(*
+  Lemma nat_comp_id (C D E F: Category) (F1: Functor C D) (F2: Functor D E) (F3: Functor E F) (A : C):
+      (compose G.(F_Hom) F.(F_Hom)) (id C A) = id E ((compose G.(F_Obj) F.(F_Obj)) A).
+  Proof.
+    intros.
+    unfold compose.
+    rewrite F.(F_id).
+    rewrite G.(F_id).
+    reflexivity.
+  Qed.
+
+  Lemma functor_comp_comp:
+    forall (C D E: Category) (F: Functor C D) (G: Functor D E) (X Y Z: C) (f: Hom C X Y) (g: Hom C Y Z),
+      (compose G.(F_Hom) F.(F_Hom)) (C.(comp) g f)
+      = E.(comp) ((compose G.(F_Hom) F.(F_Hom)) g) ((compose G.(F_Hom) F.(F_Hom)) f).
+  Proof.
+    intros.
+    unfold compose.
+    rewrite F.(F_comp).
+    rewrite G.(F_comp).
+    reflexivity.
+  Qed.
+
+  Instance functor_comp {C D E: Category} (F: Functor C D) (G: Functor D E): Functor C E := {
+    F_Obj := compose G.(F_Obj) F.(F_Obj);
+    F_Hom _ _ := compose G.(F_Hom) F.(F_Hom);
+    F_id := functor_comp_id _ _ _ _ _;
+    F_comp := functor_comp_comp _ _ _ _ _;
+  }.
+*)
+End NAT.
+
 Definition NatIsomorphism {C D: Category} {F G: Functor C D} (a: NatTrans F G) :=
   exists (b: NatTrans G F), forall (A: C), Inverses (a.(nt) A) (b.(nt) A).
 
@@ -306,6 +354,7 @@ Qed.
 Theorem id_epi (C: Category) (A: C): epimorphism (id C A).
 Proof.
   unfold epimorphism.
+  unfold monomorphism.
   intros.
   rewrite comp_id_right in H.
   rewrite comp_id_right in H.
