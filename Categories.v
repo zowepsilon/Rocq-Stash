@@ -30,6 +30,16 @@ Proof.
   trivial.
 Qed.
 
+Theorem C_op_op_is_C (C: Category): Op (Op C) = C.
+Proof.
+  unfold Op.
+  simpl.
+  destruct C.
+  f_equal.
+  simpl.
+  apply proof_irrelevance. (** TODO: remove proof irrelevance and use (eq_sym (eq_sym p) = p) *)
+Qed.
+
 Definition Inverses {C: Category} {A B: C} (f: (Hom C) A B) (g: (Hom C) B A) :=
   ((comp C) g f = (id C) A) /\ ((comp C) f g = (id C) B).
 
@@ -94,6 +104,7 @@ Proof.
   intros IsoXY IsoYZ.
   unfold Isomorphic in *.
   destruct IsoXY as [xy IsoXY].
+
   destruct IsoYZ as [yz IsoYZ].
   exists ((comp C) yz xy).
   apply iso_comp.
@@ -327,13 +338,6 @@ End NAT.
 
 Definition NatIsomorphism {C D: Category} {F G: Functor C D} (a: NatTrans F G) :=
   exists (b: NatTrans G F), forall (A: C), Inverses (a.(nt) A) (b.(nt) A).
-
-Theorem C_op_op_is_C (C: Category): Op (Op C) = C.
-Proof.
-  set (D := Op (Op C)).
-  destruct C.
-  destruct D.
-Admitted.
 
 Definition monomorphism {C: Category} {E F: C} (f: Hom C E F) :=
   forall (G: C), forall (g h: Hom C G E), (comp C f g = comp C f h) -> (g = h).
